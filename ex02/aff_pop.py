@@ -4,24 +4,31 @@ import matplotlib.ticker as ticker
 import pandas as pd
 
 
-def convert_pop(value)-> float:
+def convert_pop(value) -> float:
     """Converts a string rep into a float"""
     if pd.isna(value):
         return None
-    
+
     value = str(value).upper().strip()
 
-    if 'M' in value:
-        return float(value.replace('M', '')) * 10**6
-    elif 'B' in value:
-        return float(value.replace('B', '')) * 10**9
-    elif 'k' in value:
-        return float(value.replace('K', '')) * 10**3
-    else:
-        return float(value)
+    try:
+        if 'M' in value:
+            return float(value.replace('M', '')) * 10**6
+        elif 'B' in value:
+            return float(value.replace('B', '')) * 10**9
+        elif 'K' in value:
+            return float(value.replace('K', '')) * 10**3
+        else:
+            return float(value)
+    except ValueError:
+        print(f"Error: corrupted value at {value}")
+        return None
 
 
 def format_kmb(x, pos):
+    """Matplotlib custom function Formatter,
+    takes a value and returns a string representation with K for thousands,
+    M for millions, and B for billions"""
     if x >= 1e9:
         return f'{x*1e-9:g}B'
     elif x >= 1e6:
@@ -33,38 +40,47 @@ def format_kmb(x, pos):
 
 
 def main():
+    """Program that takes a population_total.csv file,
+    and compares the values for China and Germany against each other"""
     df = load("population_total.csv")
     if df is None:
         return
 
-    if "country" not in df.columns:
-        print("Error: missing 'country' column")
-        return
+    try:
+        germany_df = df[df['country'] == 'Germany']
+        china_df = df[df['country'] == 'China']
 
-    country_df = df[df['country'] == 'Germany']
-    if country_df.empty:
-        print("Error: country not found")
-        return
+        china_row = china_df.iloc[0]
+        ger_row = germany_df.iloc[0]
 
-    row = country_df.iloc[0]
-    print(type(row))
-    series = row.iloc[1:252]
-    series = series.apply(convert_pop)
-    print(row)
+        china_series = china_row.iloc[1:251].apply(convert_pop)
+        ger_series = ger_row.iloc[1:251].apply(convert_pop)
 
-    print(series)
-    series = series.apply(pd.to_numeric, errors="coerce").dropna()
-    if series.empty:
-        print("Error: no numeric year data to plot")
-        return
+        new_df = pd.DataFrame({
+            'China': china_series,
+            'Germany': ger_series
+        })
 
-    series.plot(kind='line', title='Germany Population Projections')
-    ax = plt.gca()
-    ax.yaxis.set_major_formatter(ticker.FuncFormatter(format_kmb))
-    plt.xlabel('Year')
-    plt.ylabel('Population')
+        new_df.index = new_df.index.astype(int)
+        fig, ax = plt.subplots()
 
-    plt.show()
+        new_df.plot(ax=ax, kind='line', title='Population Projections')
+
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(format_kmb))
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(40))
+        # ax.tick_params(axis='x', rotation=45)
+
+        plt.xlabel('Year')
+        plt.ylabel('Population')
+
+        plt.show()
+
+    except KeyError:
+        print("Error: column 'country' not found in CSV file.")
+    except IndexError:
+        print("Error: China or Germany not found in array")
+    except Exception as e:
+        print(f"Unexepected error : {e}")
 
 
 if __name__ == "__main__":
