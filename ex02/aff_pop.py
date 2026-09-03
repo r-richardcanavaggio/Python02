@@ -41,24 +41,24 @@ def format_kmb(x, pos):
 
 def main():
     """Program that takes a population_total.csv file,
-    and compares the values for China and Germany against each other"""
+    and compares the values for China and France against each other"""
     df = load("population_total.csv")
     if df is None:
         return
 
     try:
-        germany_df = df[df['country'] == 'Germany']
+        france_df = df[df['country'] == 'France']
         china_df = df[df['country'] == 'China']
 
         china_row = china_df.iloc[0]
-        ger_row = germany_df.iloc[0]
+        fra_row = france_df.iloc[0]
 
         china_series = china_row.iloc[1:251].apply(convert_pop)
-        ger_series = ger_row.iloc[1:251].apply(convert_pop)
+        ger_series = fra_row.iloc[1:251].apply(convert_pop)
 
         new_df = pd.DataFrame({
             'China': china_series,
-            'Germany': ger_series
+            'France': ger_series
         })
 
         new_df.index = new_df.index.astype(int)
@@ -78,7 +78,7 @@ def main():
     except KeyError:
         print("Error: column 'country' not found in CSV file.")
     except IndexError:
-        print("Error: China or Germany not found in array")
+        print("Error: China or Francey not found in array")
     except Exception as e:
         print(f"Unexepected error : {e}")
 

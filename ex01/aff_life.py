@@ -13,7 +13,7 @@ def main():
     if "country" not in df.columns:
         print("Error: missing 'country' column")
         return
-    country_df = df[df['country'] == 'Germany']
+    country_df = df[df['country'] == 'France']
     if country_df.empty:
         print("Error: country not found")
         return
@@ -26,7 +26,7 @@ def main():
         print("Error: no numeric year data to plot")
         return
 
-    series.plot(kind='line', title='Germany Life expectancy Projections')
+    series.plot(kind='line', title='France Life expectancy Projections')
     plt.xlabel('Year')
     plt.ylabel('Life expectancy')
 
